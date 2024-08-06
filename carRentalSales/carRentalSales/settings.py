@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 
+import cloudinary
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -53,7 +55,12 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'carRentalSales.urls'
-
+cloudinary.config(
+    cloud_name="djkg7qktn",
+    api_key="761645745792171",
+    api_secret="8L4nP4-nW_5boss5jgFfXX9iFUc",
+    # api_proxy="http://proxy.server:3128"
+)
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
