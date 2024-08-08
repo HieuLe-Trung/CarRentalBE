@@ -2,13 +2,13 @@ from cloudinary.models import CloudinaryResource
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.utils.html import mark_safe
-from .models import User, Category, Car, Image
+from .models import User, Category, RentCar, SaleCar, Image
 
 
-class HCarAppAdminSite(AdminSite):
-    site_title = 'Trang quản trị HCAR'
-    site_header = 'Hệ thống Quản lý cửa hàng XE Ô TÔ HCAR'
-    index_title = 'Trang chủ quản trị'
+# class HCarAppAdminSite(AdminSite):
+#     site_title = 'Trang quản trị HCAR'
+#     site_header = 'Hệ thống Quản lý cửa hàng XE Ô TÔ HCAR'
+#     index_title = 'Trang chủ quản trị'
 
 
 class CateAdmin(admin.ModelAdmin):
@@ -27,19 +27,32 @@ class CateAdmin(admin.ModelAdmin):
             )
 
 
-class ImageInlineAdmin(admin.StackedInline):
+class ImageSaleCarInlineAdmin(admin.StackedInline):
     model = Image
     extra = 0
-    fk_name = 'car'
+    fk_name = 'sale_car'
 
 
-class CarAdmin(admin.ModelAdmin):
+class ImageRentCarInlineAdmin(admin.StackedInline):
+    model = Image
+    extra = 0
+    fk_name = 'rent_car'
+
+
+class RentCarAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
     search_fields = ['name']
-    inlines = [ImageInlineAdmin, ]
+    inlines = [ImageRentCarInlineAdmin, ]
 
 
-admin_site = HCarAppAdminSite(name='myHCar')
+class SaleCarAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name']
+    search_fields = ['name']
+    inlines = [ImageSaleCarInlineAdmin, ]
+
+
+# admin_site = HCarAppAdminSite(name='myHCar')
 
 admin.site.register(Category, CateAdmin)
-admin.site.register(Car, CarAdmin)
+admin.site.register(RentCar, RentCarAdmin)  # Quản lý các xe đang cho thue
+admin.site.register(SaleCar, SaleCarAdmin)  # Quản lý các xe đang bán
