@@ -16,6 +16,7 @@ class User(AbstractUser):
     avatar = CloudinaryField(folder="avatarUserCar", null=False, blank=False, default='')
     phone = models.CharField(max_length=10, unique=True, null=True)
     email = models.EmailField(max_length=50, unique=True)
+    address = models.CharField(max_length=100,default='')
     license_number = models.CharField(max_length=20, blank=True)
     license_verified = models.BooleanField(default=False)  # true khi store duyệt gplx
 
@@ -54,8 +55,7 @@ class RentCar(Car):  # đăng xe cho thuê
 
 class SaleCar(Car):
     price = models.FloatField(null=True, blank=True)
-    quantity = models.IntegerField()
-    status = models.CharField(max_length=50)
+    sold = models.BooleanField(default=False)
 
 
 class Image(models.Model):
@@ -69,9 +69,29 @@ class Rental(BaseModel):  # phiếu thuê
     car = models.ForeignKey(RentCar, on_delete=models.SET_NULL, null=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    deposit_amount = models.DecimalField(max_digits=10, decimal_places=2)
     total_rental_price = models.DecimalField(max_digits=10, decimal_places=2, null=True,
                                              blank=True)  # dễ thống kê doanh thu
+    actual_return_date = models.DateTimeField(null=True, blank=True)  # Ngày trả xe thực tế
+    late_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Phí phạt trả trễ
+    confirmation_status = models.CharField(max_length=20, default='')  # xác nhận của cửa hàng khi nhận được tiền mặt
+
+
+class Deposit(BaseModel):
+    rental = models.OneToOneField(Rental, on_delete=models.CASCADE, null=True, blank=True)  # 1 phiếu thuê tđ với 1 phiếu cọc
+    sale = models.ForeignKey(SaleCar, on_delete=models.CASCADE, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    deposit_payment_status = models.CharField(max_length=20)  # để kiểm tra xem những ngay đã cọc sẽ vô hiệu hóa cho thuê
+
+
+class PaymentMethod(models.Model):
+    name = models.CharField(max_length=50)
+
+
+class Payment(BaseModel):
+    rental = models.OneToOneField(Rental, on_delete=models.CASCADE)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_status = models.CharField(max_length=20)  # đã thanh toán, chưa thanh toán
 
 
 class Review(BaseModel):
@@ -83,12 +103,6 @@ class Review(BaseModel):
 
     class Meta:
         unique_together = ('user', 'car', 'rental')
-
-
-class Sale(BaseModel):  # phiếu bán
-    car = models.ForeignKey(SaleCar, on_delete=models.CASCADE)
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE)
-    sale_date = models.DateTimeField(auto_now=True)
 
 
 class FavoriteCar(BaseModel):
