@@ -50,7 +50,7 @@ class Car(BaseModel):
 class RentCar(Car):  # đăng xe cho thuê
     price_per_day = models.FloatField()
     mileage = models.IntegerField(default=0)
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50)  # sẵn xe, đang cho thue, sold
 
 
 class SaleCar(Car):

@@ -53,6 +53,7 @@ class SaleCarAdmin(admin.ModelAdmin):
 
 # admin_site = HCarAppAdminSite(name='myHCar')
 
+admin.site.register(User)
 admin.site.register(Category, CateAdmin)
 admin.site.register(RentCar, RentCarAdmin)  # Quản lý các xe đang cho thue
 admin.site.register(SaleCar, SaleCarAdmin)  # Quản lý các xe đang bán

@@ -37,9 +37,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'oauth2_provider',
     'carRentalSalesapp.apps.CarrentalsalesappConfig'
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    )
+}
 import pymysql
 
 pymysql.install_as_MySQLdb()
@@ -130,3 +136,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CLIENT_ID = '9j6dUaEdBDMrkGrwmddWDYjWOjIdFX0k5RgTqG24'
+CLIENT_SECRET = 'mDFYWH0TkmdJDpT1h7gl6dz3PDDaqgbjVNfYWUynr8RDmPYb1sreQSRZLDAbXzKa4hbIp7v66eMLe1s9V7rhe4e6uEVxkxIcf8WzOXpTGPEbAsvNkSM9BHn2tXQdldcM'
