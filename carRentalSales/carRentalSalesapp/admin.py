@@ -1,8 +1,10 @@
 from cloudinary.models import CloudinaryResource
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
+from django.contrib.contenttypes.models import ContentType
 from django.utils.html import mark_safe
-from .models import User, Category, RentCar, SaleCar, Image
+from .models import User, Category, RentCar, SaleCar, ImageSale, ImageRent
 
 
 # class HCarAppAdminSite(AdminSite):
@@ -28,30 +30,28 @@ class CateAdmin(admin.ModelAdmin):
 
 
 class ImageSaleCarInlineAdmin(admin.StackedInline):
-    model = Image
+    model = ImageSale
     extra = 0
     fk_name = 'sale_car'
 
 
 class ImageRentCarInlineAdmin(admin.StackedInline):
-    model = Image
+    model = ImageRent
     extra = 0
     fk_name = 'rent_car'
 
 
 class RentCarAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name']
+    list_display = ['id', 'name','category']
     search_fields = ['name']
     inlines = [ImageRentCarInlineAdmin, ]
 
 
 class SaleCarAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name']
+    list_display = ['id', 'name','category']
     search_fields = ['name']
     inlines = [ImageSaleCarInlineAdmin, ]
 
-
-# admin_site = HCarAppAdminSite(name='myHCar')
 
 admin.site.register(User)
 admin.site.register(Category, CateAdmin)
