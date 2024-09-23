@@ -62,12 +62,12 @@ class SaleCar(Car):
 
 class ImageRent(models.Model):
     image = CloudinaryField(folder="ImgRentCar", null=True, blank=True)
-    rent_car = models.ForeignKey(RentCar, on_delete=models.CASCADE, default=None)
+    rent_car = models.ForeignKey(RentCar, related_name='images', on_delete=models.CASCADE, default=None)
 
 
 class ImageSale(models.Model):
     image = CloudinaryField(folder="ImgSaleCar", null=True, blank=True)
-    sale_car = models.ForeignKey(SaleCar, on_delete=models.CASCADE, default=None)
+    sale_car = models.ForeignKey(SaleCar,  related_name='images',on_delete=models.CASCADE, default=None)
 
 
 class Rental(BaseModel):  # phiếu thuê

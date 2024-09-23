@@ -1,16 +1,20 @@
 from cloudinary.models import CloudinaryResource
-from django import forms
 from django.contrib import admin
-from django.contrib.admin import AdminSite
-from django.contrib.contenttypes.models import ContentType
 from django.utils.html import mark_safe
 from .models import User, Category, RentCar, SaleCar, ImageSale, ImageRent
 
 
-# class HCarAppAdminSite(AdminSite):
-#     site_title = 'Trang quản trị HCAR'
-#     site_header = 'Hệ thống Quản lý cửa hàng XE Ô TÔ HCAR'
-#     index_title = 'Trang chủ quản trị'
+class UserAdmin(admin.ModelAdmin):
+    list_display = ['id', 'username', 'email', 'is_staff']
+    search_fields = ['username', 'email']
+
+    def save_model(self, request, obj, form, change):
+        if form.cleaned_data.get('password'):
+            # Kiểm tra xem mật khẩu có được băm chưa
+            raw_password = form.cleaned_data['password']
+            if not obj.password.startswith('pbkdf2'):
+                obj.set_password(raw_password)
+        super().save_model(request, obj, form, change)
 
 
 class CateAdmin(admin.ModelAdmin):
@@ -53,7 +57,7 @@ class SaleCarAdmin(admin.ModelAdmin):
     inlines = [ImageSaleCarInlineAdmin, ]
 
 
-admin.site.register(User)
+admin.site.register(User,UserAdmin)
 admin.site.register(Category, CateAdmin)
 admin.site.register(RentCar, RentCarAdmin)  # Quản lý các xe đang cho thue
 admin.site.register(SaleCar, SaleCarAdmin)  # Quản lý các xe đang bán
