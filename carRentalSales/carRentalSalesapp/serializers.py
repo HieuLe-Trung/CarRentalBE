@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
 from .models import User, Category, RentCar, SaleCar, ImageRent, ImageSale
 
@@ -31,6 +32,20 @@ class UserSerializer(ModelSerializer):
         user.set_password((data['password']))
         user.save()
         return user
+
+    def patch(self, instance, validated_data):
+        email = validated_data.get('email', instance.email)
+        phone = validated_data.get('phone', instance.phone)
+
+        # Kiểm tra xem email hoặc phone đã tồn tại trong cơ sở dữ liệu hay không
+        if User.objects.exclude(id=instance.id).filter(email=email).exists():
+            raise ValidationError("Email đã tồn tại trong hệ thống.")
+        if User.objects.exclude(id=instance.id).filter(phone=phone).exists():
+            raise ValidationError("Số điện thoại đã tồn tại trong hệ thống.")
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class CateSerializer(ModelSerializer):
@@ -67,7 +82,7 @@ class RentCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = RentCar
         fields = ['id', 'category', 'name', 'model', 'fuel_type', 'transmission', 'seats', 'interior_color',
-                  'condition', 'origin', 'color', 'year', 'description', 'price_per_day', 'mileage', 'status', 'images']
+                  'condition', 'origin', 'color', 'year', 'description', 'price_per_day', 'status', 'images']
         # có cate để post
 
     def create(self, validated_data):
@@ -82,4 +97,4 @@ class SaleCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = SaleCar
         fields = ['id', 'name', 'model', 'fuel_type', 'transmission', 'seats', 'interior_color',
-                  'condition', 'origin', 'color', 'year', 'description', 'price', 'sold']
+                  'condition', 'origin', 'color', 'year', 'description', 'price', 'mileage', 'sold']

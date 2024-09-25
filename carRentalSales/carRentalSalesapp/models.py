@@ -51,12 +51,14 @@ class Car(BaseModel):
 
 class RentCar(Car):  # đăng xe cho thuê
     price_per_day = models.FloatField()
-    mileage = models.IntegerField(default=0)
+    rental_count = models.PositiveIntegerField(default=0)
+    average_rating = models.FloatField(default=0)
     status = models.CharField(max_length=50)  # sẵn xe, đang cho thue, sold
 
 
 class SaleCar(Car):
     price = models.FloatField(null=True, blank=True)
+    mileage = models.IntegerField(default=0)
     sold = models.BooleanField(default=False)
 
 
@@ -114,15 +116,20 @@ class Review(BaseModel):
         unique_together = ('user', 'car', 'rental')
 
 
-class FavoriteCar(BaseModel):
+class FavoriteRentCar(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rent_car = models.ForeignKey(RentCar, on_delete=models.CASCADE, null=True,
-                                 blank=True)  # khi user tim xe thuê thi set sale_car là null
-    sale_car = models.ForeignKey(SaleCar, on_delete=models.CASCADE, null=True, blank=True)
+    rent_car = models.ForeignKey(RentCar, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('user', 'rent_car', 'sale_car')
+        unique_together = ('user', 'rent_car')
 
+
+class FavoriteSaleCar(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    sale_car = models.ForeignKey(SaleCar, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'sale_car')
 
 class Maintenance(models.Model):
     car = models.ForeignKey(SaleCar, on_delete=models.CASCADE)
