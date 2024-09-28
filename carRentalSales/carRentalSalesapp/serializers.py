@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
-from .models import User, Category, RentCar, SaleCar, ImageRent, ImageSale
+from .models import User, Category, RentCar, SaleCar, ImageRent, ImageSale, FavoriteRentCar, FavoriteSaleCar
 
 
 class UserSerializer(ModelSerializer):
@@ -81,9 +81,7 @@ class RentCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RentCar
-        fields = ['id', 'category', 'name', 'model', 'fuel_type', 'transmission', 'seats', 'interior_color',
-                  'condition', 'origin', 'color', 'year', 'description', 'price_per_day', 'status', 'images']
-        # có cate để post
+        fields = ['id', 'name', 'category', 'price_per_day', 'images']
 
     def create(self, validated_data):
         images_data = self.context.get('request').FILES.getlist('images')
@@ -93,8 +91,45 @@ class RentCarSerializer(serializers.ModelSerializer):
         return rent
 
 
+class RentCarDetailSerializer(RentCarSerializer):
+    class Meta:
+        model = RentCarSerializer.Meta.model
+        fields = RentCarSerializer.Meta.fields + ['model', 'fuel_type', 'transmission', 'seats', 'interior_color',
+                                                  'condition', 'origin', 'color', 'year', 'description', 'status']
+
+
 class SaleCarSerializer(serializers.ModelSerializer):
+    images = ImageSaleSerializer(many=True, required=False)
+
     class Meta:
         model = SaleCar
-        fields = ['id', 'name', 'model', 'fuel_type', 'transmission', 'seats', 'interior_color',
-                  'condition', 'origin', 'color', 'year', 'description', 'price', 'mileage', 'sold']
+        fields = ['id', 'name', 'category', 'price', 'images']
+
+    def create(self, validated_data):
+        images_data = self.context.get('request').FILES.getlist('images')
+        sale_car = SaleCar.objects.create(**validated_data)
+        for image_data in images_data:
+            ImageSale.objects.create(sale_car=sale_car, image=image_data)
+        return sale_car
+
+
+class SaleCarDetailSerializer(SaleCarSerializer):
+    class Meta:
+        model = SaleCarSerializer.Meta.model
+        fields = SaleCarSerializer.Meta.fields + [
+            'model', 'fuel_type', 'transmission', 'seats',
+            'interior_color', 'condition', 'origin',
+            'color', 'year', 'description', 'mileage', 'sold'
+        ]
+
+
+class FavoriteRentCarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteRentCar
+        fields = ['user', 'rent_car']
+
+
+class FavoriteSaleCarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteSaleCar
+        fields = ['user', 'sale_car']
