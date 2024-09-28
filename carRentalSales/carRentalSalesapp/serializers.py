@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
-from .models import User, Category, RentCar, SaleCar, ImageRent, ImageSale, FavoriteRentCar, FavoriteSaleCar
+from .models import User, Category, RentCar, SaleCar, ImageRent, ImageSale, FavoriteRentCar, FavoriteSaleCar, Rental
 
 
 class UserSerializer(ModelSerializer):
@@ -133,3 +133,9 @@ class FavoriteSaleCarSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteSaleCar
         fields = ['user', 'sale_car']
+
+
+class RentalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rental
+        fields = ['id', 'renter', 'car', 'start_date', 'end_date', 'total_rental_price']

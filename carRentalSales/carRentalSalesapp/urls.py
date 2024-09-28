@@ -9,6 +9,7 @@ router = DefaultRouter()
 router.register('user', views.UserViewSet,basename='user')
 router.register('rent-car', views.RentCarViewSet,basename='rent-car')
 router.register('sale-car', views.SaleCarViewSet,basename='sale-car')
+router.register('rental', views.RentalViewSet,basename='rental')
 
 urlpatterns = [
     path('', include(router.urls)),

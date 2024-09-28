@@ -1,7 +1,7 @@
 from cloudinary.models import CloudinaryResource
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import User, Category, RentCar, SaleCar, ImageSale, ImageRent
+from .models import User, Category, RentCar, SaleCar, ImageSale, ImageRent, Rental
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -61,3 +61,4 @@ admin.site.register(User,UserAdmin)
 admin.site.register(Category, CateAdmin)
 admin.site.register(RentCar, RentCarAdmin)  # Quản lý các xe đang cho thue
 admin.site.register(SaleCar, SaleCarAdmin)  # Quản lý các xe đang bán
+admin.site.register(Rental)

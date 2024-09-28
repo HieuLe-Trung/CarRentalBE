@@ -1,3 +1,8 @@
+import datetime
+from datetime import datetime
+from decimal import Decimal
+
+from django.utils import timezone
 from rest_framework import viewsets, generics, permissions, status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
@@ -6,8 +11,8 @@ from rest_framework.response import Response
 from . import serializers
 from .perms import IsEmployee
 from .serializers import UserSerializer, CateSerializer, RentCarDetailSerializer, SaleCarDetailSerializer, \
-    RentCarSerializer, SaleCarSerializer, FavoriteRentCarSerializer, FavoriteSaleCarSerializer
-from .models import User, Category, RentCar, SaleCar, FavoriteRentCar, FavoriteSaleCar
+    RentCarSerializer, SaleCarSerializer, FavoriteRentCarSerializer, FavoriteSaleCarSerializer, RentalSerializer
+from .models import User, Category, RentCar, SaleCar, FavoriteRentCar, FavoriteSaleCar, Rental
 
 
 class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
@@ -71,6 +76,25 @@ class RentCarViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [IsEmployee()]
 
+    @action(methods=['get'], detail=False, url_path='available')
+    def available_cars(self, request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if not start_date or not end_date:
+            return Response({"detail": "Vui lòng cung cấp ngày bắt đầu và ngày kết thúc."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        # Truy vấn những xe đã đặt
+        booked_cars = Rental.objects.filter(
+            start_date__lt=end_date,
+            end_date__gt=start_date
+        ).values_list('car', flat=True)
+
+        available_cars = self.queryset.exclude(id__in=booked_cars)  # Exclude: tìm những xe khong nằm trong ds
+
+        serializer = self.get_serializer(available_cars, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class SaleCarViewSet(viewsets.ModelViewSet):
     queryset = SaleCar.objects.all()
@@ -92,12 +116,6 @@ class SaleCarViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [IsEmployee()]
 
-
-from rest_framework import viewsets, permissions
-from rest_framework.response import Response
-from rest_framework import status
-from .models import FavoriteRentCar, FavoriteSaleCar, RentCar, SaleCar
-from .serializers import FavoriteRentCarSerializer, FavoriteSaleCarSerializer
 
 class FavoriteViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
@@ -144,3 +162,43 @@ class FavoriteViewSet(viewsets.ViewSet):
 
         return Response({"detail": "Loại xe không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class RentalViewSet(viewsets.ViewSet,):
+    queryset = Rental.objects.all()
+    serializer_class = RentalSerializer
+
+    def get_permissions(self):
+        if self.action == 'confirm_return':
+            return [IsEmployee()]
+        return [permissions.IsAuthenticated()]
+
+    def create(self, request, *args, **kwargs):
+        rent_car_id = request.data.get('rent_car_id')
+        start_date = request.data.get('start_date')
+        end_date = request.data.get('end_date')
+
+        rent_car = RentCar.objects.get(id=rent_car_id)
+
+        # Tính toán số ngày thuê
+        start_date_dt = timezone.datetime.fromisoformat(start_date)
+        end_date_dt = timezone.datetime.fromisoformat(end_date)
+        rental_days = (end_date_dt - start_date_dt).days
+
+        # Tính tổng giá thuê
+        total_rental_price = rental_days * rent_car.price_per_day
+
+        # Tạo một phiếu thuê mới khi gửi yêu cau thue
+        rental_data = {
+            "renter": request.user.id,
+            "car": rent_car_id,
+            "start_date": start_date_dt,
+            "end_date": end_date_dt,
+            "total_rental_price": total_rental_price
+        }
+
+        rental_serializer = self.get_serializer(data=rental_data)
+        if rental_serializer.is_valid():
+            rental_serializer.save()
+            return Response(rental_serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(rental_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
