@@ -163,7 +163,7 @@ class FavoriteViewSet(viewsets.ViewSet):
         return Response({"detail": "Loại xe không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class RentalViewSet(viewsets.ViewSet,):
+class RentalViewSet(viewsets.ViewSet,generics.RetrieveAPIView, generics.ListCreateAPIView):
     queryset = Rental.objects.all()
     serializer_class = RentalSerializer
 
@@ -202,3 +202,45 @@ class RentalViewSet(viewsets.ViewSet,):
             return Response(rental_serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(rental_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # api trả xe
+    @action(methods=['post'], detail=True)
+    def return_car(self, request, pk):
+        rental = self.get_object()
+
+        actual_return_date = request.data.get('actual_return_date')
+        rental.actual_return_date = actual_return_date
+        rental.save()
+        price_per_day = rental.total_rental_price / ((rental.end_date - rental.start_date).days or 1)
+        # or 1 khi ngày trả = ngày thuê thì tính 1 ngày để không chia 0
+
+        # Tính số giờ trả xe
+        return_time = datetime.fromisoformat(actual_return_date)
+        rental_duration = return_time - rental.start_date
+        hours_returned = rental_duration.total_seconds() / 3600  # Chuyển đổi thành giờ
+
+        # Tính phí
+        if hours_returned < 12:
+            # Dưới 12 giờ
+            total_fee = hours_returned * Decimal(60000)  # 60k mỗi giờ
+        else:
+            # Trên 12 giờ
+            overdue_days = (return_time.date() - rental.end_date.date()).days
+            if overdue_days > 0:
+                total_fee = (overdue_days * price_per_day) * Decimal(1.1)  # 110% phí thuê/ngày
+            else:
+                total_fee = 0  # Không tính phí nếu trả đúng hạn
+
+        rental.late_fee = total_fee
+        rental.save()
+
+        return Response({"Phí trễ": total_fee}, status=status.HTTP_200_OK)
+
+    # xác nhận đã trả
+    @action(methods=['post'], detail=True)
+    def confirm_return(self, request, pk=None):
+        rental = self.get_object()
+        rental.confirmation_status = "confirmed"
+        rental.save()
+
+        return Response({"detail": "Trả xe thành công."}, status=status.HTTP_200_OK)
